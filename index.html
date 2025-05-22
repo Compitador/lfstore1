@@ -1,0 +1,158 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bem-vindo à LF Store, sua loja de tecnologia em São Luís, MA. Oferecemos serviços e produtos de qualidade.">
+    <meta name="keywords" content="LF Store, tecnologia, São Luís, serviços, vendas, contato">
+    <meta name="author" content="LF Store">
+    <meta property="og:title" content="LF Store - Tecnologia em São Luís, MA">
+    <meta property="og:image" content="https://lfstore.com/images/logo.png">
+    <meta property="og:description" content="Sua loja de tecnologia em São Luís, MA. Serviços e produtos de qualidade.">
+    <title>LF Store - Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <link rel="icon" href="https://via.placeholder.com/32.png?text=LF" type="image/png">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .smooth-scroll { scroll-behavior: smooth; }
+        .whatsapp-btn { position: fixed; bottom: 20px; right: 20px; z-index: 100; }
+        .bemvindo-bg { background-image: url('images/bemvindo-bg.jpg'); background-size: cover; background-position: center; }
+        .bemvindo-bg::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 1; }
+        .bemvindo-content { position: relative; z-index: 2; }
+        .nav-links { display: none; }
+        .nav-links.active { display: flex; flex-direction: column; position: absolute; top: 64px; left: 0; width: 100%; background: #dc2626; padding: 16px; z-index: 40; }
+        @media (min-width: 1024px) {
+            .nav-links { display: flex; flex-direction: row; position: static; background: none; padding: 0; }
+            .menu-toggle { display: none; }
+            .text-4xl { font-size: 3rem; line-height: 3.5rem; }
+            .text-5xl { font-size: 3.75rem; line-height: 4rem; }
+            .text-xl { font-size: 1.5rem; line-height: 2rem; }
+            .py-24 { padding-top: 6rem; padding-bottom: 6rem; }
+            .gap-8 { gap: 2rem; }
+            .whatsapp-btn img { width: 64px; height: 64px; }
+        }
+        @media (max-width: 640px) {
+            .text-4xl { font-size: 1.875rem; line-height: 2.25rem; }
+            .text-xl { font-size: 1.125rem; line-height: 1.75rem; }
+            .py-24 { padding-top: 4rem; padding-bottom: 4rem; }
+            .whatsapp-btn img { width: 48px; height: 48px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .gsap-anim { transition: none; transform: none; opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 smooth-scroll">
+    <!-- Navbar -->
+    <nav class="bg-red-600 text-white fixed w-full top-0 z-50 shadow-lg" role="navigation">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center max-w-screen-xl">
+            <a href="index.html" class="flex items-center">
+                <img src="images/logo.png" alt="Logo LF Store" class="w-8 h-8 lg:w-10 lg:h-10">
+            </a>
+            <button class="menu-toggle text-white focus:outline-none lg:hidden" aria-label="Abrir menu de navegação">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+            <div class="nav-links lg:flex lg:items-center lg:gap-6">
+                <a href="index.html" class="flex items-center gap-2 hover:text-gray-200 transition p-2 lg:p-0">Home</a>
+                <a href="servicos.html" class="flex items-center gap-2 hover:text-gray-200 transition p-2 lg:p-0">Serviços</a>
+                <a href="vendas.html" class="flex items-center gap-2 hover:text-gray-200 transition p-2 lg:p-0">Vendas</a>
+                <a href="contato.html" class="flex items-center gap-2 hover:text-gray-200 transition p-2 lg:p-0">Contato</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Bem-vindo Section -->
+    <section class="py-24 bemvindo-bg relative text-white mt-16 lg:mt-0" role="region" aria-label="Bem-vindo à LF Store">
+        <div class="container mx-auto px-4 max-w-screen-xl bemvindo-content">
+            <h1 class="text-4xl lg:text-5xl font-bold text-center mb-6 drop-shadow-lg">Bem-vindo à LF Store</h1>
+            <p class="text-xl lg:text-2xl text-center max-w-3xl mx-auto drop-shadow-md">Sua loja de tecnologia em São Luís, MA. Oferecemos os melhores serviços e produtos para atender suas necessidades.</p>
+        </div>
+    </section>
+
+    <!-- Photos Section -->
+    <section class="py-24 bg-white" role="region" aria-label="Galeria de fotos">
+        <div class="container mx-auto px-4 max-w-screen-xl">
+            <h2 class="text-4xl lg:text-5xl font-bold text-center text-red-600 mb-12">Informática</h2>
+            <div class="flex flex-col lg:flex-row justify-center gap-8">
+                <img src="images/foto1.jpg" srcset="images/foto1-low.jpg 300w, images/foto1.jpg 600w" sizes="(max-width: 768px) 300px, 600px" alt="Foto da loja 1" class="max-w-md w-full h-auto rounded-lg shadow-lg" loading="lazy">
+                <img src="images/foto2.jpg" srcset="images/foto2-low.jpg 300w, images/foto2.jpg 600w" sizes="(max-width: 768px) 300px, 600px" alt="Foto da loja 2" class="max-w-md w-full h-auto rounded-lg shadow-lg" loading="lazy">
+            </div>
+        </div>
+    </section>
+
+    <!-- WhatsApp Button -->
+    <a href="https://wa.me/5598992151120" target="_blank" class="whatsapp-btn group" aria-label="Fale conosco via WhatsApp">
+        <img src="https://img.icons8.com/color/48/000000/whatsapp.png" alt="WhatsApp" class="w-12 h-12 lg:w-16 lg:h-16">
+        <span class="hidden lg:block absolute bottom-20 right-0 bg-green-600 text-white px-3 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">Fale agora!</span>
+    </a>
+
+    <!-- Footer -->
+    <footer class="bg-red-600 text-white py-8">
+        <div class="container mx-auto px-4 text-center max-w-screen-xl">
+            <p>© 2025 LF Store. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Menu Hambúrguer
+        const menuToggle = document.querySelector('.menu-toggle');
+        const navLinks = document.querySelector('.nav-links');
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+            });
+        }
+
+        // GSAP Animations
+        gsap.registerPlugin(ScrollTrigger);
+        gsap.from("nav", { duration: 0.5, y: -100, opacity: 0, ease: "power2.out" });
+        gsap.from(".whatsapp-btn", { duration: 0.5, opacity: 0, x: 100, delay: 1 });
+        gsap.from(".bemvindo-content", { duration: 0.5, opacity: 0, y: 50, scrollTrigger: { trigger: ".bemvindo-content", start: "top 80%" } });
+        gsap.from(".max-w-md", { duration: 0.5, opacity: 0, y: 50, stagger: 0.2, scrollTrigger: { trigger: ".max-w-md", start: "top 80%" } });
+    </script>
+</body>
+</html>

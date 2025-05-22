@@ -1,0 +1,210 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Confira os produtos disponíveis na LF Store em São Luís, MA. Teclados, mouses, webcams, pendrives, cabos HDMI e USB.">
+    <meta name="keywords" content="LF Store, produtos, tecnologia, São Luís, vendas, teclados, mouses, webcams, pendrives, cabos">
+    <meta name="author" content="LF Store">
+    <meta property="og:title" content="LF Store - Produtos em São Luís, MA">
+    <meta property="og:image" content="https://lfstore.com/images/logo.png">
+    <meta property="og:description" content="Produtos de tecnologia em São Luís, MA: teclados, mouses, webcams, pendrives e mais.">
+    <title>LF Store - Vendas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <link rel="icon" href="https://via.placeholder.com/32.png?text=LF" type="image/png">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .smooth-scroll { scroll-behavior: smooth; }
+        .product-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .product-card:hover { transform: translateY(-10px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); }
+        .product-card a { position: relative; }
+        .product-card a::after {
+            content: 'Clique para saber mais!';
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #dc2626;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .product-card a:hover::after { opacity: 1; }
+        .whatsapp-btn { position: fixed; bottom: 20px; right: 20px; z-index: 100; }
+        .nav-links { display: none; }
+        .nav-links.active { display: flex; flex-direction: column; position: absolute; top: 64px; left: 0; width: 100%; background: #dc2626; padding: 16px; z-index: 40; }
+        @media (min-width: 1024px) {
+            .nav-links { display: flex; flex-direction: row; position: static; background: none; padding: 0; }
+            .menu-toggle { display: none; }
+            .text-4xl { font-size: 3rem; line-height: 3.5rem; }
+            .text-5xl { font-size: 3.75rem; line-height: 4rem; }
+            .text-xl { font-size: 1.5rem; line-height: 2rem; }
+            .text-2xl { font-size: 1.875rem; line-height: 2.25rem; }
+            .py-24 { padding-top: 6rem; padding-bottom: 6rem; }
+            .gap-8 { gap: 2rem; }
+            .p-8 { padding: 2rem; }
+            .whatsapp-btn img { width: 64px; height: 64px; }
+        }
+        @media (max-width: 640px) {
+            .text-4xl { font-size: 1.875rem; line-height: 2.25rem; }
+            .text-xl { font-size: 1.125rem; line-height: 1.75rem; }
+            .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+            .py-24 { padding-top: 4rem; padding-bottom: 4rem; }
+            .gap-8 { gap: 1rem; }
+            .p-8 { padding: 1rem; }
+            .product-card img { max-width: 150px; }
+            .whatsapp-btn img { width: 48px; height: 48px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .product-card, .gsap-anim { transition: none; transform: none; opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 smooth-scroll">
+    <!-- Navbar -->
+    <nav class="bg-red-600 text-white fixed w-full top-0 z-50 shadow-lg" role="navigation">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center max-w-screen-xl">
+            <a href="index.html" class="flex items-center">
+                <img src="images/logo.png" alt="Logo LF Store" class="w-8 h-8 lg:w-10 lg:h-10">
+            </a>
+            <button class="menu-toggle text-white focus:outline-none lg:hidden" aria-label="Abrir menu de navegação">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+            <div class="nav-links lg:flex lg:items-center lg:gap-6">
+                <a href="index.html" class="flex items-center gap-2 hover:text-gray-200 transition p-2 lg:p-0">Home</a>
+                <a href="servicos.html" class="flex items-center gap-2 hover:text-gray-200 transition p-2 lg:p-0">Serviços</a>
+                <a href="vendas.html" class="flex items-center gap-2 hover:text-gray-200 transition p-2 lg:p-0">Vendas</a>
+                <a href="contato.html" class="flex items-center gap-2 hover:text-gray-200 transition p-2 lg:p-0">Contato</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Vendas Section -->
+    <section class="py-24 bg-white min-h-screen mt-16 lg:mt-0" role="region" aria-label="Produtos à venda">
+        <div class="container mx-auto px-4 max-w-screen-xl">
+            <h2 class="text-4xl lg:text-5xl font-bold text-center text-red-600 mb-12">Nossos Produtos</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Produto 1: Teclado USB -->
+                <div class="product-card bg-gray-100 p-8 rounded-lg shadow-lg text-center">
+                    <img src="images/teclado_usb.jpg" srcset="images/teclado_usb-low.jpg 200w, images/teclado_usb.jpg 400w" sizes="(max-width: 768px) 200px, 400px" alt="Teclado USB ergonômico" class="mx-auto mb-4 max-w-[250px] h-auto" loading="lazy">
+                    <h3 class="text-xl lg:text-2xl font-semibold mb-3">Teclado USB</h3>
+                    <p class="text-lg lg:text-xl mb-4">Teclado ergonômico com conexão USB.</p>
+                    <a href="https://wa.me/5598992151120?text=Quero saber mais sobre o Teclado USB!" target="_blank" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 transition" aria-label="Fale conosco sobre o Teclado USB via WhatsApp">Fale Conosco</a>
+                </div>
+                <!-- Produto 2: Mouse Óptico -->
+                <div class="product-card bg-gray-100 p-8 rounded-lg shadow-lg text-center">
+                    <img src="images/mouse_optico.jpg" srcset="images/mouse_optico-low.jpg 200w, images/mouse_optico.jpg 400w" sizes="(max-width: 768px) 200px, 400px" alt="Mouse Óptico preciso" class="mx-auto mb-4 max-w-[250px] h-auto" loading="lazy">
+                    <h3 class="text-xl lg:text-2xl font-semibold mb-3">Mouse Óptico</h3>
+                    <p class="text-lg lg:text-xl mb-4">Mouse preciso com design confortável.</p>
+                    <a href="https://wa.me/5598992151120?text=Quero saber mais sobre o Mouse Óptico!" target="_blank" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 transition" aria-label="Fale conosco sobre o Mouse Óptico via WhatsApp">Fale Conosco</a>
+                </div>
+                <!-- Produto 3: Webcam HD -->
+                <div class="product-card bg-gray-100 p-8 rounded-lg shadow-lg text-center">
+                    <img src="images/webcam_hd.jpg" srcset="images/webcam_hd-low.jpg 200w, images/webcam_hd.jpg 400w" sizes="(max-width: 768px) 200px, 400px" alt="Webcam HD para videochamadas" class="mx-auto mb-4 max-w-[250px] h-auto" loading="lazy">
+                    <h3 class="text-xl lg:text-2xl font-semibold mb-3">Webcam HD</h3>
+                    <p class="text-lg lg:text-xl mb-4">Webcam com resolução HD para videochamadas.</p>
+                    <a href="https://wa.me/5598992151120?text=Quero saber mais sobre a Webcam HD!" target="_blank" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 transition" aria-label="Fale conosco sobre a Webcam HD via WhatsApp">Fale Conosco</a>
+                </div>
+                <!-- Produto 4: Pendrive -->
+                <div class="product-card bg-gray-100 p-8 rounded-lg shadow-lg text-center">
+                    <img src="images/pendrive.jpg" srcset="images/pendrive-low.jpg 200w, images/pendrive.jpg 400w" sizes="(max-width: 768px) 200px, 400px" alt="Pendrive de alta capacidade" class="mx-auto mb-4 max-w-[250px] h-auto" loading="lazy">
+                    <h3 class="text-xl lg:text-2xl font-semibold mb-3">Pendrive</h3>
+                    <p class="text-lg lg:text-xl mb-4">Armazenamento portátil com alta capacidade.</p>
+                    <a href="https://wa.me/5598992151120?text=Quero saber mais sobre o Pendrive!" target="_blank" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 transition" aria-label="Fale conosco sobre o Pendrive via WhatsApp">Fale Conosco</a>
+                </div>
+                <!-- Produto 5: Cabo HDMI -->
+                <div class="product-card bg-gray-100 p-8 rounded-lg shadow-lg text-center">
+                    <img src="images/cabo_hdmi.jpg" srcset="images/cabo_hdmi-low.jpg 200w, images/cabo_hdmi.jpg 400w" sizes="(max-width: 768px) 200px, 400px" alt="Cabo HDMI de alta definição" class="mx-auto mb-4 max-w-[250px] h-auto" loading="lazy">
+                    <h3 class="text-xl lg:text-2xl font-semibold mb-3">Cabo HDMI</h3>
+                    <p class="text-lg lg:text-xl mb-4">Cabo HDMI para conexões de alta definição.</p>
+                    <a href="https://wa.me/5598992151120?text=Quero saber mais sobre o Cabo HDMI!" target="_blank" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 transition" aria-label="Fale conosco sobre o Cabo HDMI via WhatsApp">Fale Conosco</a>
+                </div>
+                <!-- Produto 6: Cabo USB -->
+                <div class="product-card bg-gray-100 p-8 rounded-lg shadow-lg text-center">
+                    <img src="images/cabo_usb.jpg" srcset="images/cabo_usb-low.jpg 200w, images/cabo_usb.jpg 400w" sizes="(max-width: 768px) 200px, 400px" alt="Cabo USB durável" class="mx-auto mb-4 max-w-[250px] h-auto" loading="lazy">
+                    <h3 class="text-xl lg:text-2xl font-semibold mb-3">Cabo USB</h3>
+                    <p class="text-lg lg:text-xl mb-4">Cabo USB durável para diversas aplicações.</p>
+                    <a href="https://wa.me/5598992151120?text=Quero saber mais sobre o Cabo USB!" target="_blank" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 transition" aria-label="Fale conosco sobre o Cabo USB via WhatsApp">Fale Conosco</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- WhatsApp Button -->
+    <a href="https://wa.me/5598992151120" target="_blank" class="whatsapp-btn group" aria-label="Fale conosco via WhatsApp">
+        <img src="https://img.icons8.com/color/48/000000/whatsapp.png" alt="WhatsApp" class="w-12 h-12 lg:w-16 lg:h-16">
+        <span class="hidden lg:block absolute bottom-20 right-0 bg-green-600 text-white px-3 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">Fale agora!</span>
+    </a>
+
+    <!-- Footer -->
+    <footer class="bg-red-600 text-white py-8">
+        <div class="container mx-auto px-4 text-center max-w-screen-xl">
+            <p>© 2025 LF Store. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Menu Hambúrguer
+        const menuToggle = document.querySelector('.menu-toggle');
+        const navLinks = document.querySelector('.nav-links');
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+            });
+        }
+
+        // GSAP Animations
+        gsap.registerPlugin(ScrollTrigger);
+        gsap.from("nav", { duration: 0.5, y: -100, opacity: 0, ease: "power2.out" });
+        gsap.from(".whatsapp-btn", { duration: 0.5, opacity: 0, x: 100, delay: 1 });
+        gsap.from(".product-card", { duration: 0.5, opacity: 0, y: 50, stagger: 0.1, scrollTrigger: { trigger: ".product-card", start: "top 80%" } });
+    </script>
+</body>
+</html>

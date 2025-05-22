@@ -1,0 +1,240 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Conheça os serviços da LF Store em São Luís, MA. Formatação, upgrades, limpeza, configuração de rede, suporte técnico e mais.">
+    <meta name="keywords" content="LF Store, serviços, tecnologia, São Luís, manutenção, formatação, upgrade, limpeza, rede, suporte">
+    <meta name="author" content="LF Store">
+    <meta property="og:title" content="LF Store - Serviços em São Luís, MA">
+    <meta property="og:image" content="https://lfstore.com/images/logo.png">
+    <meta property="og:description" content="Serviços de tecnologia em São Luís, MA: formatação, upgrades, limpeza, suporte técnico e mais.">
+    <title>LF Store - Serviços</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <link rel="icon" href="https://via.placeholder.com/32.png?text=LF" type="image/png">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .smooth-scroll { scroll-behavior: smooth; }
+        .service-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .service-card:hover { transform: translateY(-10px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); }
+        .service-card a { position: relative; }
+        .service-card a::after {
+            content: 'Clique para agendar!';
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #dc2626;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .service-card a:hover::after { opacity: 1; }
+        .whatsapp-btn { position: fixed; bottom: 20px; right: 20px; z-index: 100; }
+        .nav-links { display: none; }
+        .nav-links.active { display: flex; flex-direction: column; position: absolute; top: 64px; left: 0; width: 100%; background: #dc2626; padding: 16px; z-index: 40; }
+        @media (min-width: 1024px) {
+            .nav-links { display: flex; flex-direction: row; position: static; background: none; padding: 0; }
+            .menu-toggle { display: none; }
+            .text-4xl { font-size: 3rem; line-height: 3.5rem; }
+            .text-5xl { font-size: 3.75rem; line-height: 4rem; }
+            .text-xl { font-size: 1.5rem; line-height: 2rem; }
+            .text-2xl { font-size: 1.875rem; line-height: 2.25rem; }
+            .py-24 { padding-top: 6rem; padding-bottom: 6rem; }
+            .gap-8 { gap: 2rem; }
+            .p-8 { padding: 2rem; }
+            .whatsapp-btn img { width: 64px; height: 64px; }
+        }
+        @media (max-width: 640px) {
+            .text-4xl { font-size: 1.875rem; line-height: 2.25rem; }
+            .text-xl { font-size: 1.125rem; line-height: 1.75rem; }
+            .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+            .py-24 { padding-top: 4rem; padding-bottom: 4rem; }
+            .gap-8 { gap: 1rem; }
+            .p-8 { padding: 1rem; }
+            .whatsapp-btn img { width: 48px; height: 48px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .service-card, .gsap-anim { transition: none; transform: none; opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 smooth-scroll">
+    <!-- Navbar -->
+    <nav class="bg-red-600 text-white fixed w-full top-0 z-50 shadow-lg" role="navigation">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center max-w-screen-xl">
+            <a href="index.html" class="flex items-center">
+                <img src="images/logo.png" alt="Logo LF Store" class="w-8 h-8 lg:w-10 lg:h-10">
+            </a>
+            <button class="menu-toggle text-white focus:outline-none lg:hidden" aria-label="Abrir menu de navegação">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+            <div class="nav-links lg:flex lg:items-center lg:gap-6">
+                <a href="index.html" class="flex items-center gap-2 hover:text-gray-200 transition p-2 lg:p-0">Home</a>
+                <a href="servicos.html" class="flex items-center gap-2 hover:text-gray-200 transition p-2 lg:p-0">Serviços</a>
+                <a href="vendas.html" class="flex items-center gap-2 hover:text-gray-200 transition p-2 lg:p-0">Vendas</a>
+                <a href="contato.html" class="flex items-center gap-2 hover:text-gray-200 transition p-2 lg:p-0">Contato</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Serviços Section -->
+    <section class="py-24 bg-white min-h-screen mt-16 lg:mt-0" role="region" aria-label="Nossos serviços">
+        <div class="container mx-auto px-4 max-w-screen-xl">
+            <h2 class="text-4xl lg:text-5xl font-bold text-center text-red-600 mb-12">Nossos Serviços</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Serviço 1: Formatação de PC -->
+                <div class="service-card bg-gray-100 p-8 rounded-lg shadow-lg text-center">
+                    <h3 class="text-xl lg:text-2xl font-semibold mb-3">Formatação de PC</h3>
+                    <p class="text-lg lg:text-xl mb-4">Reinstalação completa do sistema operacional com backup de dados e instalação de drivers.</p>
+                    <a href="https://wa.me/5598992151120?text=Quero agendar formatação de PC!" target="_blank" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 transition" aria-label="Agendar formatação de PC via WhatsApp">Agendar</a>
+                </div>
+                <!-- Serviço 2: Upgrade de Hardware -->
+                <div class="service-card bg-gray-100 p-8 rounded-lg shadow-lg text-center">
+                    <h3 class="text-xl lg:text-2xl font-semibold mb-3">Upgrade de Hardware</h3>
+                    <p class="text-lg lg:text-xl mb-4">Troca ou adição de RAM, SSD, placa de vídeo e outros componentes para melhorar o desempenho.</p>
+                    <a href="https://wa.me/5598992151120?text=Quero agendar upgrade de hardware!" target="_blank" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 transition" aria-label="Agendar upgrade de hardware via WhatsApp">.Raw
+                    </a>
+                </div>
+                <!-- Serviço 3: Limpeza Interna -->
+                <div class="service-card bg-gray-100 p-8 rounded-lg shadow-lg text-center">
+                    <h3 class="text-xl lg:text-2xl font-semibold mb-3">Limpeza Interna</h3>
+                    <p class="text-lg lg:text-xl mb-4">Limpeza completa de poeira e substituição de pasta térmica para evitar superaquecimento.</p>
+                    <a href="https://wa.me/5598992151120?text=Quero agendar limpeza interna!" target="_blank" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 transition" aria-label="Agendar limpeza interna via WhatsApp">Agendar</a>
+                </div>
+                <!-- Serviço 4: Configuração de Rede -->
+                <div class="service-card bg-gray-100 p-8 rounded-lg shadow-lg text-center">
+                    <h3 class="text-xl lg:text-2xl font-semibold mb-3">Configuração de Rede</h3>
+                    <p class="text-lg lg:text-xl mb-4">Instalação e configuração de roteadores, extensores Wi-Fi e redes cabeadas.</p>
+                    <a href="https://wa.me/5598992151120?text=Quero agendar configuração de rede!" target="_blank" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 transition" aria-label="Agendar configuração de rede via WhatsApp">Agendar</a>
+                </div>
+                <!-- Serviço 5: Instalação de Impressoras -->
+                <div class="service-card bg-gray-100 p-8 rounded-lg shadow-lg text-center">
+                    <h3 class="text-xl lg:text-2xl font-semibold mb-3">Instalação de Impressoras</h3>
+                    <p class="text-lg lg:text-xl mb-4">Configuração de impressoras em rede ou USB, com instalação de drivers e testes de impressão.</p>
+                    <a href="https://wa.me/5598992151120?text=Quero agendar instalação de impressora!" target="_blank" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 transition" aria-label="Agendar instalação de impressora via WhatsApp">Agendar</a>
+                </div>
+                <!-- Serviço 6: Reinstalação de Drivers -->
+                <div class="service-card bg-gray-100 p-8 rounded-lg shadow-lg text-center">
+                    <h3 class="text-xl lg:text-2xl font-semibold mb-3">Reinstalação de Drivers</h3>
+                    <p class="text-lg lg:text-xl mb-4">Atualização ou reinstalação de drivers para garantir o funcionamento correto de dispositivos.</p>
+                    <a href="https://wa.me/5598992151120?text=Quero agendar reinstalação de drivers!" target="_blank" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 transition" aria-label="Agendar reinstalação de drivers via WhatsApp">Agendar</a>
+                </div>
+                <!-- Serviço 7: Remoção de Vírus -->
+                <div class="service-card bg-gray-100 p-8 rounded-lg shadow-lg text-center">
+                    <h3 class="text-xl lg:text-2xl font-semibold mb-3">Remoção de Vírus</h3>
+                    <p class="text-lg lg:text-xl mb-4">Escaneamento e eliminação de malwares, vírus e spywares, com instalação de antivírus.</p>
+                    <a href="https://wa.me/5598992151120?text=Quero agendar remoção de vírus!" target="_blank" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 transition" aria-label="Agendar remoção de vírus via WhatsApp">Agendar</a>
+                </div>
+                <!-- Serviço 8: Configuração de E-mails -->
+                <div class="service-card bg-gray-100 p-8 rounded-lg shadow-lg text-center">
+                    <h3 class="text-xl lg:text-2xl font-semibold mb-3">Configuração de E-mails</h3>
+                    <p class="text-lg lg:text-xl mb-4">Configuração de contas de e-mail em clientes como Outlook ou Thunderbird.</p>
+                    <a href="https://wa.me/5598992151120?text=Quero agendar configuração de e-mails!" target="_blank" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 transition" aria-label="Agendar configuração de e-mails via WhatsApp">Agendar</a>
+                </div>
+                <!-- Serviço 9: Manutenção de Servidores -->
+                <div class="service-card bg-gray-100 p-8 rounded-lg shadow-lg text-center">
+                    <h3 class="text-xl lg:text-2xl font-semibold mb-3">Manutenção de Servidores</h3>
+                    <p class="text-lg lg:text-xl mb-4">Monitoramento, atualização e manutenção de servidores para empresas.</p>
+                    <a href="https://wa.me/5598992151120?text=Quero agendar manutenção de servidores!" target="_blank" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 transition" aria-label="Agendar manutenção de servidores via WhatsApp">Agendar</a>
+                </div>
+                <!-- Serviço 10: Suporte Técnico Remoto -->
+                <div class="service-card bg-gray-100 p-8 rounded-lg shadow-lg text-center">
+                    <h3 class="text-xl lg:text-2xl font-semibold mb-3">Suporte Técnico Remoto</h3>
+                    <p class="text-lg lg:text-xl mb-4">Assistência técnica via acesso remoto para resolução de problemas em tempo real.</p>
+                    <a href="https://wa.me/5598992151120?text=Quero agendar suporte técnico remoto!" target="_blank" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 transition" aria-label="Agendar suporte técnico remoto via WhatsApp">Agendar</a>
+                </div>
+                <!-- Serviço 11: Consultoria em TI -->
+                <div class="service-card bg-gray-100 p-8 rounded-lg shadow-lg text-center">
+                    <h3 class="text-xl lg:text-2xl font-semibold mb-3">Consultoria em TI</h3>
+                    <p class="text-lg lg:text-xl mb-4">Planejamento e otimização de infraestrutura de TI para pequenas e médias empresas.</p>
+                    <a href="https://wa.me/5598992151120?text=Quero agendar consultoria em TI!" target="_blank" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 transition" aria-label="Agendar consultoria em TI via WhatsApp">Agendar</a>
+                </div>
+                <!-- Serviço 12: Configuração de Backup -->
+                <div class="service-card bg-gray-100 p-8 rounded-lg shadow-lg text-center">
+                    <h3 class="text-xl lg:text-2xl font-semibold mb-3">Configuração de Backup</h3>
+                    <p class="text-lg lg:text-xl mb-4">Implementação de sistemas de backup automático em nuvem ou dispositivos locais.</p>
+                    <a href="https://wa.me/5598992151120?text=Quero agendar configuração de backup!" target="_blank" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-700 transition" aria-label="Agendar configuração de backup via WhatsApp">Agendar</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- WhatsApp Button -->
+    <a href="https://wa.me/5598992151120" target="_blank" class="whatsapp-btn group" aria-label="Fale conosco via WhatsApp">
+        <img src="https://img.icons8.com/color/48/000000/whatsapp.png" alt="WhatsApp" class="w-12 h-12 lg:w-16 lg:h-16">
+        <span class="hidden lg:block absolute bottom-20 right-0 bg-green-600 text-white px-3 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">Fale agora!</span>
+    </a>
+
+    <!-- Footer -->
+    <footer class="bg-red-600 text-white py-8">
+        <div class="container mx-auto px-4 text-center max-w-screen-xl">
+            <p>© 2025 LF Store. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Menu Hambúrguer
+        const menuToggle = document.querySelector('.menu-toggle');
+        const navLinks = document.querySelector('.nav-links');
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+            });
+        }
+
+        // GSAP Animations
+        gsap.registerPlugin(ScrollTrigger);
+        gsap.from("nav", { duration: 0.5, y: -100, opacity: 0, ease: "power2.out" });
+        gsap.from(".whatsapp-btn", { duration: 0.5, opacity: 0, x: 100, delay: 1 });
+        gsap.from(".service-card", { duration: 0.5, opacity: 0, y: 50, stagger: 0.1, scrollTrigger: { trigger: ".service-card", start: "top 80%" } });
+    </script>
+</body>
+</html>
